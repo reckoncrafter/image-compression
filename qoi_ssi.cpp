@@ -5,8 +5,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../headers/stb_image.h"
-#include "../headers/stb_image_write.h"
+#include "headers/stb_image.h"
+#include "headers/stb_image_write.h"
 
 #define SSI_RUN_LENGTH_TAG 0b01000000
 
