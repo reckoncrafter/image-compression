@@ -6,6 +6,7 @@
 #include <bitset>
 #include <iostream>
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -17,6 +18,15 @@ struct RGB{
         os << " G: " << (int)t.g;
         os << " B: " << (int)t.b;
         return os;
+    }
+    friend bool operator==(const RGB &lhs, const RGB &rhs){
+        return (rhs.r == lhs.r && rhs.g == lhs.g && rhs.b == lhs.b);
+    }
+    friend bool operator<(const RGB &lhs, const RGB &rhs){
+        return ( (lhs.r + lhs.g  + lhs.b) < (rhs.r + rhs.g + rhs.b));
+    }
+    friend bool operator>(const RGB &lhs, const RGB &rhs){
+        return ( (lhs.r + lhs.g  + lhs.b) > (rhs.r + rhs.g + rhs.b));
     }
 };
 
@@ -31,12 +41,13 @@ struct INDEX_TAG{
         }
         n[1] = depth[1];
         n[0] = depth[0];
+        return (uint8_t)n.to_ulong();
     }
 };
 
 list<RGB> hash_table[64];
 
-int hash(RGB pixel){
+int hash_pixel(RGB pixel){
     return (pixel.r + pixel.g + pixel.b) % 64;
 }
 
@@ -65,9 +76,36 @@ int main(){
 
     RGB* proc = process_image(rgb_image, NUM_PIXELS, channels);
 
+    /*
     for(int i = 0; i < NUM_PIXELS; i++){
         cout << proc[i] << endl;
     }
+    */
+
+   // load hash table
+    for(int i = 0; i < NUM_PIXELS; i++){
+        int index = hash_pixel(proc[i]);
+        hash_table[index].push_back(proc[i]);
+    }
+    for(int i = 0; i < 64; i++){
+        hash_table[i].sort();
+        hash_table[i].unique();
+    }
+
+
+    for(int i = 0; i < 64; i++){
+        cout << "[" << i << "]: -> ";
+        for(auto a : hash_table[i]){
+            cout << a << " -> ";
+        }
+        cout << endl;
+    }
+
+
+    
+
+
+
 
 
 }
