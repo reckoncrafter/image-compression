@@ -154,6 +154,7 @@ class RGB_DIFF_LONG : public TAG{
 
     public:
     triplet rgb; // values should range from 1 - 16
+                 // values could range from -7 - +8
     // same scheme as RGB_DIFF_SHORT
 
     // iiii drrr dggg dbbb
@@ -300,30 +301,84 @@ vector<TAG*> compress(triplet* input, int _pixels){
     int i = 0;
     uint8_t cnt = 0;
 
-    RGB* init_tag = new RGB;
-    init_tag->rgb = input[i];
-    result.push_back(init_tag);
+    // convert all pixels
+    while(i < _pixels){
+        RGB* _n = new RGB;
+        _n->rgb = input[i];
+        result.push_back(_n);
+        i++;
+    }
 
     // run-length encoding
-    while(i < _pixels){
-        if(input[i] == input[i+1] && cnt < 63){
-            cnt++;
-            i++;
+    vector<TAG*> rl_encoded;
+    
+    int counter = 0;
+    for(auto a = result.begin() + 1; a != result.end() - 1; a++){
+        RGB* a1 = dynamic_cast<RGB*>(*a);
+        RGB* a2 = dynamic_cast<RGB*>(*(a+1));
+        
+        if(a1 && a2){
+            
+            if(a1->rgb == a2->rgb){
+                counter++;
+            }
+            else{
+                counter++;
+                RGB* predicate = new RGB;
+                *predicate = *a1;
+                
+                rl_encoded.push_back(predicate);
+                
+                if(counter > 1){
+                    RUN_LENGTH* rl = new RUN_LENGTH;
+                    rl->run = counter;
+                    rl_encoded.push_back(rl);
+                }
+                counter = 0;
+            }
         }
         else{
-            if(cnt > 1){
-                RUN_LENGTH* rn = new RUN_LENGTH;
-                rn->run = cnt;
-                result.push_back(rn);
-            }
-            i++;
-            RGB* _n = new RGB;
-            _n->rgb = input[i];
-            result.push_back(_n);
+            cout << "FAILURE" << endl;
+        }
+        
+    }
+    result = rl_encoded;
 
-            cnt = 0;
+
+    
+    // long difference encoding
+    // this works and im not going to use it
+    /*
+    vector<TAG*> long_diff;
+    for(auto a = result.begin() + 1; a != result.end() - 1; a++){
+        RGB* a1 = dynamic_cast<RGB*>(*a);
+        RGB* a2 = dynamic_cast<RGB*>(*(a+1));
+
+        if(a1 && a2){
+            int dr = (int)a1->rgb.r - (int)a2->rgb.r;
+            int dg = (int)a1->rgb.g - (int)a2->rgb.g;
+            int db = (int)a1->rgb.b - (int)a2->rgb.b;
+            cout << dr << " ~ " << dg << " ~ " << db << endl;
+            auto r = [](int diff){ return (diff >= -7 && diff <= 8);};
+
+            RGB* _n = new RGB;
+            *_n = *a1;
+            long_diff.push_back(_n);
+            if(r(dr) && r(dg) && r(db)){
+                RGB_DIFF_LONG* dl = new RGB_DIFF_LONG;
+                dl->rgb.r = dr + 7;
+                dl->rgb.g = dg + 7;
+                dl->rgb.b = db + 7;
+                long_diff.push_back(dl);
+            } else{
+                RGB* _n2 = new RGB;
+                *_n2 = *a2;
+                long_diff.push_back(_n2);
+            }
         }
     }
+    */
+
     return result;
 }
 
@@ -379,8 +434,11 @@ int main(){
 
     vector<TAG*> compressed = compress(proc, NUM_PIXELS);
 
+    int i = 0;
     for(auto a : compressed){
-        a->print_human_readable();
+        i++;
+        if(i > 128) break;
+        //a->print_human_readable();
     }
 
     return 0;
